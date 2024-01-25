@@ -16,8 +16,6 @@ tokio = { workspace = "true" }
 anyhow = { workspace = "true" }
 tracing = { workspace = "true" }
 serde = { workspace = "true" }
-askama = { version = "0.12.1", features = ["with-axum"] }
-askama_axum = "0.4.0"
 axum-login = {git = "https://github.com/maxcountryman/axum-login"}
 axum-messages = "0.3.0"
 tower-sessions = { version = "0.10.0", default-features = false }
@@ -32,3 +30,8 @@ tower-http = { version = "0.5", default-features = false, features = [
     "compression-br",
 ] }
 time = "0.3.30"
+axum-htmx = "0.5.0"
+minijinja = { git = "https://github.com/mitsuhiko/minijinja", branch = "main", features = [
+    "loader",
+] }
+

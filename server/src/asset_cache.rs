@@ -49,7 +49,7 @@ impl AssetCache {
     async fn load_files() -> Self {
         let mut cache = HashMap::default();
 
-        let assets: Vec<_> = std::fs::read_dir("build")
+        let assets: Vec<_> = std::fs::read_dir("server/build")
             .unwrap_or_else(|e| panic!("failed to read build directory: {}", e))
             .filter_map(Result::ok)
             .filter_map(|file| {
@@ -62,7 +62,10 @@ impl AssetCache {
                     .into_os_string()
                     .into_string()
                     .ok()?
-                    .replace("build", "assets");
+                    .replace("server/build", "assets")
+                    .replace("\\", "/");
+
+             
 
                 std::fs::read(&path)
                     .ok()

@@ -13,9 +13,9 @@ use sqlx::{
 
 pub type DbPool = SqlitePool;
 
-pub async fn pool(db: &str) -> Result<DbPool, sqlx::Error> {
+pub async fn pool() -> anyhow::Result<DbPool> {
     let options = SqliteConnectOptions::new()
-        .filename(db)
+    .filename(&dotenvy::var("DATABASE_URL")?)
         .create_if_missing(true);
     let pool = SqlitePool::connect_with(options).await?;
     Ok(pool)

@@ -5,7 +5,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilte
 async fn main() {
     tracing_subscriber::registry()
         .with(EnvFilter::new(std::env::var("RUST_LOG").unwrap_or_else(
-            |_| "foundry-forum=trace,axum_login=debug,tower_sessions=debug,sqlx=warn".into(),
+            |_| "foundry-forum=trace,server=trace,axum_login=debug,tower_sessions=debug,sqlx=warn".into(),
         )))
         .with(tracing_subscriber::fmt::layer())
         .try_init()

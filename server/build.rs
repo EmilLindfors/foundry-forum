@@ -1,18 +1,21 @@
-use std::process::Command;
+use std::{env, path::Path, process::Command};
 
 fn main() {
     println!("cargo:rerun-if-changed=templates");
     println!("cargo:rerun-if-changed=assets");
+
     std::fs::remove_dir_all("build").unwrap_or_default();
+
+    let out_dir = env::var("OUT_DIR").unwrap();
 
     Command::new("tailwindcss")
         .args([
             "-c",
             "tailwind.config.js",
             "-i",
-            "static/index.css",
+            "assets/styles/index.css",
             "-o",
-            "build/index.css",
+            "./build/index.css",
             "--minify",
         ])
         .status()
@@ -33,7 +36,7 @@ fn main() {
         .expect("failed to run bun");
 
     std::fs::remove_file("build/index.css").unwrap_or_default();
-    //copy_files("public");
+    copy_files("public");
 }
 
 fn copy_files(dir: &str) {

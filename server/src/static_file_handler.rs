@@ -1,17 +1,16 @@
-use std::sync::Arc;
+use std::{ffi::OsStr, sync::Arc};
 
 use axum::{
     extract::{Path, State},
     http::{
-        header::{ACCEPT, CONNECTION, CONTENT_ENCODING, CONTENT_TYPE},
-        HeaderMap, HeaderName, HeaderValue, Method, StatusCode,
+        header::{CONTENT_ENCODING, CONTENT_TYPE},
+        HeaderMap, HeaderValue, StatusCode,
     },
-    response::{sse::Event, Html, IntoResponse, Sse},
-    routing::{delete, get},
-    Extension, Router,
+    response::IntoResponse,
+    routing::get, Router,
 };
 use axum_cc::{CacheControlLayer, MimeType};
-
+use minijinja::Environment;
 use crate::AppState;
 
 pub fn static_file_handler(state: Arc<AppState>) -> Router {
@@ -46,4 +45,27 @@ pub fn static_file_handler(state: Arc<AppState>) -> Router {
         )
         .layer(CacheControlLayer::default())
         .with_state(state)
+}
+
+
+pub fn import_templates() -> anyhow::Result<Environment<'static>> {
+    let mut env = Environment::new();
+
+    for entry in std::fs::read_dir("server/templates")?.filter_map(Result::ok) {
+        let path = entry.path();
+
+        if path.is_file() && path.extension() == Some(OsStr::new("html")) {
+            let name = path
+                .file_name()
+                .and_then(OsStr::to_str)
+                .ok_or_else(|| anyhow::anyhow!("failed to get filename"))?
+                .to_owned();
+
+            let data = std::fs::read_to_string(&path)?;
+
+            env.add_template_owned(name, data)?;
+        }
+    }
+
+    Ok(env)
 }

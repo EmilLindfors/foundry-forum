@@ -24,9 +24,14 @@
         class="bg-light-primary text-light-secondary transition dark:bg-dark-primary dark:text-dark-secondary">
         {% include "navbar.html" %}
 
-        <main class="flex flex-col items-center gap-2">
+        {% if message %}
+        <strong>  {{ message }}</strong>
+        {% endif %}
+
+        <main id="content" class="flex flex-col items-center gap-2">
             {% block main %} {% endblock %}
         </main>
+        
     </body>
 
 </html>

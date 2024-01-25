@@ -1,16 +1,16 @@
+{% extends "_base.html" if base is defined else "_partial.html" %}
+
 {% block title %}
   Login
 {% endblock %}
 
-{% set cur_page = "login" %}
 
-{% block body %}
+{% block main %}
   <h1 class="text-5xl font-bold mb-8">Login</h1>
-  <form hx-post="/login" hx-disabled-elt="find button" hx-target="#content" hx-target-401="#errors" class="mb-8"
-    _="on htmx:beforeRequest transition <div.alert/>'s opacity to 0 over 200ms then remove <div.alert/>">
+  <form hx-post="/login" hx-disabled-elt="find button" hx-target="#content" hx-target-401="#errors" class="mb-8">
     <div class="mb-4">
-      <label target="email" class="label">Email</label>
-      <input id="email" type="email" class="input input-bordered w-full max-w-xs" name="email" value="{{ values.email if values }}" required />
+      <label target="username" class="label">Username</label>
+      <input id="username" type="text" class="input input-bordered w-full max-w-xs" name="username" value="{{ values.username if values }}" required />
     </div>
     <div class="mb-4">
       <label target="password" class="label">Password</label>
@@ -31,7 +31,7 @@
       </div>
     {% endblock %}
 
-    {% if let Some(next) = next %}
+    {% if next %}
     <input type="hidden" name="next" value="{{next}}" />
     {% endif %}
 
