@@ -8,9 +8,9 @@ use db::{
     SqlitePool,
 };
 use password_auth::verify_password;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct User(pub DbUser);
 
 impl AuthUser for User {
@@ -69,15 +69,15 @@ impl AuthnBackend for Backend {
             .fetch_optional(&self.db)
             .await?;
 
-        let res = user.filter(|user| {
-            verify_password(creds.password, &user.password)
-                .ok()
-                .is_some() // We're using password-based authentication--this
-                           // works by comparing our form input with an argon2
-                           // password hash.
-        });
-
-        Ok(res.map(User))
+        if let Some(user) = user {
+            if verify_password(creds.password, &user.password).is_ok() {
+                return Ok(Some(User(user)));
+            } else {
+                Err(DbError::PasswordIncorrect)
+            }
+        } else {
+            Err(DbError::UserNotFound)
+        }
     }
 
     async fn get_user(&self, user_id: &UserId<Self>) -> Result<Option<Self::User>, Self::Error> {
@@ -115,5 +115,3 @@ impl AuthzBackend for Backend {
         Ok(permissions.into_iter().collect())
     }
 }
-
-

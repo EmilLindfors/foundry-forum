@@ -11,15 +11,15 @@ pub struct BaseTemplateData {
 }
 
 impl BaseTemplateData {
-    pub fn new(assets: SharedAssetCache) -> Self {
+    pub fn new(assets: SharedAssetCache, css: &str, js: &str) -> Self {
         let styles = assets
-            .get("index.css")
+            .get(css)
             .expect("failed to build base template data: index.css")
             .path
             .clone();
 
         let scripts = assets
-            .get("index.js")
+            .get(js)
             .expect("failed to build base template data: index.js")
             .path
             .clone();
@@ -28,8 +28,8 @@ impl BaseTemplateData {
     }
 
     /// Loads the assets and leaks the allocation, returning a &'static AssetCache.
-    pub fn load_static(assets: SharedAssetCache) -> &'static BaseTemplateData {
-        let template_data = BaseTemplateData::new(assets);
+    pub fn load_static(assets: SharedAssetCache, css: &str, js: &str) -> &'static BaseTemplateData {
+        let template_data = BaseTemplateData::new(assets, css, js);
         Box::leak(Box::new(template_data))
     }
 }

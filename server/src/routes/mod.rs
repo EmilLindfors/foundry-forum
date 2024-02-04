@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, vec};
 
 use axum::{
     extract::{Query, State},
@@ -13,7 +13,7 @@ use minijinja::context;
 use serde::Deserialize;
 
 use crate::{
-    auth::{Backend, Credentials},
+    auth::{self, Backend, Credentials},
     AppState,
 };
 
@@ -78,7 +78,45 @@ pub async fn post_login(
                 )
                 .into_response()
         }
-        Err(_) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+        Err(e) => {
+            match e {
+                axum_login::Error::Backend(e) => {
+                    match e {
+                        db::error::DbError::UserNotFound => {
+                            return state
+                                .render_with_context(
+                                    boosted,
+                                    "login.html",
+                                    context! {
+                                        username_error => Some("Username does not exist".to_string()),
+                                        next => creds.next,
+                                    },
+                                )
+                                .into_response()
+                        }
+                        db::error::DbError::PasswordIncorrect => {
+                            return state
+                                .render_with_context(
+                                    boosted,
+                                    "login.html",
+                                    context! {
+                                        password_error => Some("Invalid password".to_string()),
+                                        next => creds.next,
+                                    },
+                                )
+                                .into_response()
+                        }
+                        _ => {
+                            return StatusCode::INTERNAL_SERVER_ERROR.into_response()
+                        }
+                    }
+                }
+                axum_login::Error::Session(_) => {
+                    return StatusCode::INTERNAL_SERVER_ERROR.into_response()
+                }
+            }
+
+        }
     };
 
     if auth_session.login(&user).await.is_err() {
@@ -94,13 +132,44 @@ pub async fn post_login(
     }
 }
 
-pub async fn index(boosted: HxBoosted, state: State<Arc<AppState>>, messages: Messages) -> impl IntoResponse {
+pub async fn index(auth_session: AuthSession<Backend>, boosted: HxBoosted, state: State<Arc<AppState>>, messages: Messages) -> impl IntoResponse {
+
+    let mut success_messages = vec![];
+    let mut error_messages = vec![];
+    let mut debug_messages = vec![];
+    let mut info_messages = vec![];
+    let mut warn_messages = vec![];
+
+
+    messages
+    .into_iter()
+    .for_each(|message| match message.level {
+        axum_messages::Level::Success => success_messages.push(message),
+        axum_messages::Level::Error => error_messages.push(message),
+        axum_messages::Level::Debug => debug_messages.push(message),
+        axum_messages::Level::Info => info_messages.push(message),
+        axum_messages::Level::Warning => warn_messages.push(message),
+    });
+
 
     state.render_with_context(boosted, "index.html", context! {
-        message => messages
-        .into_iter()
-        .map(|message| format!("{}: {}", message.level, message))
-        .collect::<Vec<_>>()
-        .join(", "),
+        user => auth_session.user.map(|user| user.0),
+        success_messages,
+        error_messages,
+        debug_messages,
+        info_messages,
+        warn_messages,
+
     })
+}
+
+
+pub async fn about(auth_session: AuthSession<Backend>, boosted: HxBoosted, state: State<Arc<AppState>>) -> impl IntoResponse {
+    return state.render_with_editor(
+        boosted,
+        "about.html",
+        context! {
+            user => auth_session.user.map(|user| user.0),
+        },
+    )
 }

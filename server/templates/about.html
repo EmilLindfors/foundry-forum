@@ -1,0 +1,29 @@
+{% extends "_base.html" if base is defined else "_partial.html" %}
+
+{% block title %}
+
+  Shuttle Todo
+
+{% endblock %}
+
+{% block main %}
+
+
+
+  <h1>Shuttle about</h1>
+<div class="bg-white w-full text-black">
+  <!-- Create the toolbar container -->
+<div id="toolbar">
+  <button class="ql-bold">Bold</button>
+  <button class="ql-italic">Italic</button>
+</div>
+
+<!-- Create the editor container -->
+<div id="editor">
+  <p>Hello World!</p>
+  <p>Some initial <strong>bold</strong> text</p>
+  <p><br /></p>
+</div>
+</div>
+
+{% endblock %}

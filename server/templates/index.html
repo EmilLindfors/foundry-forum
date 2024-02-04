@@ -1,8 +1,22 @@
 {% extends "_base.html" if base is defined else "_partial.html" %}
 
+{% block title %}
+
+  Shuttle Todo
+
+{% endblock %}
+
+
+
 {% block main %}
 
+
+
   <h1>Shuttle Todo</h1>
+
+  {% if user %}
+  <p>{{ user.username }}</p>
+  {% endif %}
 
 
 {% endblock %}

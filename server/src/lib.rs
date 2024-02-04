@@ -6,13 +6,12 @@ mod routes;
 mod static_file_handler;
 use crate::{
     auth::Backend,
-    routes::{index, login, logout, post_login, register},
+    routes::{about, index, login, logout, post_login, register},
 };
 use api_error::ApiError;
 use asset_cache::{AssetCache, SharedAssetCache};
 use axum::{http::{
-    header::{ACCEPT, CONNECTION, CONTENT_TYPE},
-    HeaderName, Method,
+    header::{ACCEPT, CONNECTION, CONTENT_TYPE}, HeaderName, HeaderValue, Method, StatusCode
 }, routing::post};
 use axum::{response::Html, routing::get, serve, Router};
 use axum_cc::CacheControlLayer;
@@ -31,7 +30,7 @@ use std::time::Duration;
 use tokio::net::TcpListener;
 use tower_http::{
     compression::{predicate::SizeAbove, CompressionLayer},
-    cors::CorsLayer,
+    cors::{Any, CorsLayer},
     CompressionLevel,
 };
 use tower_sessions_sqlx_store::SqliteStore;
@@ -44,6 +43,7 @@ pub struct AppState {
     pub env: minijinja::Environment<'static>,
     asset_cache: SharedAssetCache,
     base_template_data: SharedBaseTemplateData,
+    quill_template_data: SharedBaseTemplateData,
 }
 
 impl AppState {
@@ -102,6 +102,35 @@ impl AppState {
             Err(_) => Err(ApiError::TemplateRender(template.name().into())),
         }
     }
+
+    pub fn render_with_editor(
+        &self,
+        HxBoosted(boosted): HxBoosted,
+        template: &str,
+        ctx: Value,
+    ) -> Result<Html<String>, ApiError> {
+        let template = self
+            .env
+            .get_template(template)
+            .map_err(|_| ApiError::TemplateNotFound(template.into()))?;
+
+        if boosted {
+            let rendered = template
+                .render(ctx)
+                .map_err(|_| ApiError::TemplateRender(template.name().into()))?;
+
+            return Ok(Html(rendered));
+        }
+
+        match template.render(context! {
+            base => Some(self.base_template_data), 
+            editor => Some(self.quill_template_data),
+            ..ctx
+        }) {
+            Ok(rendered) => Ok(Html(rendered)),
+            Err(_) => Err(ApiError::TemplateRender(template.name().into())),
+        }
+    }
 }
 
 pub struct Server {
@@ -124,7 +153,8 @@ impl Server {
             db,
             env,
             asset_cache,
-            base_template_data: BaseTemplateData::load_static(asset_cache),
+            base_template_data: BaseTemplateData::load_static(asset_cache, "index.css", "index.js"),
+            quill_template_data: BaseTemplateData::load_static(asset_cache, "snow.css", "quill.js"),
         };
 
         Ok(Self {
@@ -156,6 +186,10 @@ impl Server {
 
         let main_router = Router::new()
             .route("/", get(index))
+            .route("/about", get(about))
+            .route("/remove", get(|| async {
+                (StatusCode::OK, "")
+            }))
             .route("/login", get(login).post(post_login))
             .route("/logout", get(logout))
             .route("/register", get(register))
@@ -182,7 +216,7 @@ impl Server {
                                 HeaderName::from_static("csrf-token"),
                             ])
                             .max_age(Duration::from_secs(86400))
-                            //.allow_origin(config.cors_origin)
+                            .allow_origin( "http://localhost:3000".parse::<HeaderValue>().unwrap(),)
                             .allow_methods([
                                 Method::GET,
                                 Method::POST,

@@ -1,6 +1,8 @@
 #[derive(Debug)]
 pub enum DbError {
     NotFound,
+    UserNotFound,
+    PasswordIncorrect,
     Sqlx(sqlx::Error),
     Other(anyhow::Error),
 }
@@ -11,6 +13,8 @@ impl std::fmt::Display for DbError {
             DbError::NotFound => write!(f, "Not found"),
             DbError::Sqlx(err) => write!(f, "Sqlx error: {}", err),
             DbError::Other(err) => write!(f, "Other error: {}", err),
+            DbError::UserNotFound => write!(f, "User not found"),
+            DbError::PasswordIncorrect => write!(f, "Password incorrect"),
         }
     }
 }

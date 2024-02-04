@@ -1,4 +1,4 @@
-<nav hx-boost="true" hx-target="main" class="flex justify-between gap-8 px-4 pt-2">
+<nav class="flex justify-between gap-8 px-4 pt-2">
     <h1 class="text-4xl font-bold domine">
         <a href="/">axum + htmx + tailwind</a>
     </h1>
@@ -16,4 +16,23 @@
                 About</a>
         </li>
     </ul>
+
+    {% if user %}
+    <div class="flex items-center gap-4">
+        <span class="text-xl font-bold">{{ user.username }}</span>
+        <a href="/logout"
+            class="border-b-2 border-b-light-highlight hover:text-light-highlight dark:border-b-dark-highlight  dark:hover:text-dark-highlight">
+            Logout</a>
+    </div>
+    {% else %}
+
+    <div class="flex items-center gap-4">
+        <a href="/login"
+            class="border-b-2 border-b-light-highlight hover:text-light-highlight dark:border-b-dark-highlight  dark:hover:text-dark-highlight">
+            Login</a>
+        <a href="/register"
+            class="border-b-2 border-b-light-highlight hover:text-light-highlight dark:border-b-dark-highlight  dark:hover:text-dark-highlight">
+            Register</a>
+    </div>
+    {% endif %}
 </nav>

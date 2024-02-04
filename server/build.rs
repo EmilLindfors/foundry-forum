@@ -35,6 +35,20 @@ fn main() {
         .status()
         .expect("failed to run bun");
 
+        Command::new("bun")
+        .args([
+            "build",
+            "--minify",
+            "--outdir=build",
+            "--entry-naming",
+            "[name].[hash].[ext]",
+            "--asset-naming",
+            "[name].[hash].[ext]",
+            "./assets/scripts/quill.ts",
+        ])
+        .status()
+        .expect("failed to run bun");
+
     std::fs::remove_file("build/index.css").unwrap_or_default();
     copy_files("public");
 }
