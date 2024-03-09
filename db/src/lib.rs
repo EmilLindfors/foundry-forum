@@ -3,6 +3,7 @@ pub use sqlx::sqlite::SqlitePool;
 use std::path::Path;
 pub mod error;
 pub mod user;
+pub mod article;
 
 use sqlx::{
     migrate::Migrator,

@@ -15,12 +15,19 @@
 
     <link rel="stylesheet" href="/{{ base.styles }}" />
     <script defer src="/{{ base.scripts }}"></script>
-   
+
     {% if editor %}
     <link rel="stylesheet" href="/{{ editor.styles }}" />
-    
+
 
     {% endif %}
+
+    {% if lexical %}
+    <script src="/{{ lexical.scripts }}" type="module"></script>
+
+
+    {% endif %}
+
 
 
     <title>Template: axum + htmx + tailwind</title>
@@ -78,53 +85,7 @@
         {% block main %} {% endblock %}
     </main>
     {% if editor %}
-    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
-    <script src=" https://cdn.jsdelivr.net/npm/quill-mention@4.1.0/dist/quill.mention.min.js "></script>
-<link href=" https://cdn.jsdelivr.net/npm/quill-mention@4.1.0/dist/quill.mention.min.css " rel="stylesheet">
-    <script>
-        const atValues = [
-  { id: 1, value: "Fredrik Sundqvist" },
-  { id: 2, value: "Patrik Sjölin" }
-];
-const hashValues = [
-  { id: 3, value: "Fredrik Sundqvist 2" },
-  { id: 4, value: "Patrik Sjölin 2" }
-];
-  var quill = new Quill('#editor', {
-    modules: {
-      toolbar: '#toolbar',
-      mention: {
-      allowedChars: /^[A-Za-z\sÅÄÖåäö]*$/,
-      mentionDenotationChars: ["@", "#"],
-      source: function(searchTerm, renderList, mentionChar) {
-        let values;
-
-        if (mentionChar === "@") {
-          values = atValues;
-        } else {
-          values = hashValues;
-        }
-
-        if (searchTerm.length === 0) {
-          renderList(values, searchTerm);
-        } else {
-          const matches = [];
-          for (let i = 0; i < values.length; i++)
-            if (
-              ~values[i].value.toLowerCase().indexOf(searchTerm.toLowerCase())
-            )
-              matches.push(values[i]);
-          renderList(matches, searchTerm);
-        }
-      }
-    }
-    },
-    placeholder: 'Compose an epic...',
-    theme: 'snow'
-  });
-
-    </script>
-    
+    <script src="/{{ editor.scripts }}"></script>
     {% endif %}
 
 </body>

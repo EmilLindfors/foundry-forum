@@ -14,13 +14,13 @@ impl BaseTemplateData {
     pub fn new(assets: SharedAssetCache, css: &str, js: &str) -> Self {
         let styles = assets
             .get(css)
-            .expect("failed to build base template data: index.css")
+            .expect(format!("failed to build base template data: {}", css).as_str())
             .path
             .clone();
 
         let scripts = assets
             .get(js)
-            .expect("failed to build base template data: index.js")
+            .expect(format!("failed to build base template data: {}", js).as_str())
             .path
             .clone();
 

@@ -13,3 +13,4 @@ sqlx = { version = "0.7.3", features = ["sqlite",  "time", "runtime-tokio"] }
 serde = { workspace = "true" }
 anyhow ={ workspace = "true" }
 dotenvy = "0.15.7"
+serde_json = "1.0.114"

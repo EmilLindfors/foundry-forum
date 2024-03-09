@@ -4,13 +4,14 @@ use axum::{
     extract::{Query, State},
     http::StatusCode,
     response::{IntoResponse, Redirect},
-    Form,
+    Form, Json,
 };
 use axum_htmx::HxBoosted;
 use axum_login::AuthSession;
 use axum_messages::Messages;
 use minijinja::context;
 use serde::Deserialize;
+use tracing::info;
 
 use crate::{
     auth::{self, Backend, Credentials},
@@ -55,6 +56,42 @@ pub async fn register(
         boosted,
         "register.html"
     )
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Draft {
+    title: String,
+    content: serde_json::Value
+}
+
+pub async fn draft(
+    boosted: HxBoosted,
+    state: State<Arc<AppState>>,
+    draft: Json<Draft>, 
+) -> impl IntoResponse {
+    let db = state.db.clone();
+    let article = db::article::Article::upsert(1, draft.title.clone(), draft.content.clone(), "content".to_string(), &db).await.unwrap();
+
+    info!("Article updated: {:?}", article.get_id());
+    (StatusCode::OK, "Draft")
+}
+
+pub async fn get_draft(
+    boosted: HxBoosted,
+    state: State<Arc<AppState>>,
+    path: Path<i64>,
+) -> impl IntoResponse {
+
+    let article = db::article::Article::find_by_id(path.0, &state.db).await.unwrap();
+    state.render_with_editor(
+        boosted,
+        "draft.html",
+        crate::Editor::Quill,
+        context! {
+            article => article,
+        },
+    )
+
 }
 
 pub async fn post_login(
@@ -168,6 +205,18 @@ pub async fn about(auth_session: AuthSession<Backend>, boosted: HxBoosted, state
     return state.render_with_editor(
         boosted,
         "about.html",
+        crate::Editor::Quill,
+        context! {
+            user => auth_session.user.map(|user| user.0),
+        },
+    )
+}
+
+pub async fn lexical(auth_session: AuthSession<Backend>, boosted: HxBoosted, state: State<Arc<AppState>>) -> impl IntoResponse {
+    return state.render_with_editor(
+        boosted,
+        "lexical.html",
+        crate::Editor::Lexical,
         context! {
             user => auth_session.user.map(|user| user.0),
         },

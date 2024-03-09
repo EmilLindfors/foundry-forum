@@ -6,7 +6,7 @@ mod routes;
 mod static_file_handler;
 use crate::{
     auth::Backend,
-    routes::{about, index, login, logout, post_login, register},
+    routes::{about, draft, index, lexical, login, logout, post_login, register},
 };
 use api_error::ApiError;
 use asset_cache::{AssetCache, SharedAssetCache};
@@ -44,6 +44,7 @@ pub struct AppState {
     asset_cache: SharedAssetCache,
     base_template_data: SharedBaseTemplateData,
     quill_template_data: SharedBaseTemplateData,
+    lexical_template_data: SharedBaseTemplateData,
 }
 
 impl AppState {
@@ -107,6 +108,7 @@ impl AppState {
         &self,
         HxBoosted(boosted): HxBoosted,
         template: &str,
+        editor: Editor,
         ctx: Value,
     ) -> Result<Html<String>, ApiError> {
         let template = self
@@ -122,15 +124,31 @@ impl AppState {
             return Ok(Html(rendered));
         }
 
-        match template.render(context! {
-            base => Some(self.base_template_data), 
-            editor => Some(self.quill_template_data),
-            ..ctx
-        }) {
-            Ok(rendered) => Ok(Html(rendered)),
-            Err(_) => Err(ApiError::TemplateRender(template.name().into())),
+        match editor {
+            Editor::Quill => match template.render(context! {
+                base => Some(self.base_template_data), 
+                editor => Some(self.quill_template_data),
+                ..ctx
+            }) {
+                Ok(rendered) => Ok(Html(rendered)),
+                Err(_) => Err(ApiError::TemplateRender(template.name().into())),
+            },
+            Editor::Lexical => match template.render(context! {
+                base => Some(self.base_template_data), 
+                lexical => Some(self.lexical_template_data),
+                ..ctx
+            }) {
+                Ok(rendered) => Ok(Html(rendered)),
+                Err(_) => Err(ApiError::TemplateRender(template.name().into())),
+            },
         }
+
     }
+}
+
+pub enum Editor {
+    Quill,
+    Lexical,
 }
 
 pub struct Server {
@@ -155,6 +173,7 @@ impl Server {
             asset_cache,
             base_template_data: BaseTemplateData::load_static(asset_cache, "index.css", "index.js"),
             quill_template_data: BaseTemplateData::load_static(asset_cache, "snow.css", "quill.js"),
+            lexical_template_data: BaseTemplateData::load_static(asset_cache, "lexical.css", "lexical_editor.js"),
         };
 
         Ok(Self {
@@ -186,7 +205,9 @@ impl Server {
 
         let main_router = Router::new()
             .route("/", get(index))
+            .route("/draft", post(draft))
             .route("/about", get(about))
+            .route("/lexical", get(lexical))
             .route("/remove", get(|| async {
                 (StatusCode::OK, "")
             }))

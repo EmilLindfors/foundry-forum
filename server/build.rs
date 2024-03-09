@@ -35,6 +35,27 @@ fn main() {
         .status()
         .expect("failed to run bun");
 
+    
+
+        Command::new("bun")
+        .args([
+            "build",
+            "--minify",
+            "--outdir=build",
+            "--entry-naming",
+            "[name].[ext]",
+            "--asset-naming",
+            "[name].[ext]",
+            "./assets/scripts/lexical_editor.ts",
+            "--external=lexical",
+            "--external=@lexical/selection",
+            "--external=@lexical/utils",
+            "--external=@lexical/html",
+            "--external=@lexical/clipboard",
+        ])
+        .status()
+        .expect("failed to build lexical");
+
         Command::new("bun")
         .args([
             "build",
@@ -48,6 +69,8 @@ fn main() {
         ])
         .status()
         .expect("failed to run bun");
+
+
 
     std::fs::remove_file("build/index.css").unwrap_or_default();
     copy_files("public");

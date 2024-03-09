@@ -15,6 +15,15 @@ create table if not exists avatars (
     user_id integer references users(id)
 );
 
+-- Creating the Articles table
+CREATE TABLE articles (
+    id integer primary key autoincrement,
+    user_id integer references users(id),
+    title text not null,
+    editor_content json not null,
+    content text not null,
+);
+
 -- Creating the Posts table
 CREATE TABLE posts (
     id integer primary key autoincrement,
